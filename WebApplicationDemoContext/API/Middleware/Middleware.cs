@@ -1,9 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace WebApplicationDemoContext.API.Middleware
 {
@@ -28,7 +23,7 @@ namespace WebApplicationDemoContext.API.Middleware
                 return;
             }
 
-            var token = authHeader.Substring(7); // Bỏ "Bearer " khỏi token
+            var token = authHeader.Substring(7);
 
             var userId = GetUserIdFromToken(token);
             if (string.IsNullOrEmpty(userId))
@@ -38,9 +33,7 @@ namespace WebApplicationDemoContext.API.Middleware
                 await context.Response.WriteAsync("Unauthorized");
                 return;
             }
-
-            _logger?.LogInformation($"Authenticated user - userID: {userId}");
-
+            
             context.Items["userID"] = userId;
 
             await next(context);
