@@ -57,7 +57,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            if (!int.TryParse(HttpContext.Items["UserId"]?.ToString(), out int userID))
+            if (!int.TryParse(HttpContext.Items["userID"]?.ToString(), out int userID))
             {
                 return BadRequest(Result<string>.Fail("Invalid User ID format"));
             }
