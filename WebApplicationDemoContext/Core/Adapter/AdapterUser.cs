@@ -8,6 +8,12 @@ namespace WebApplicationDemoContext.Repository
     public class AdapterUser : IUserRepository
     {
         private readonly AppDBContext _dbContext;
+
+        public AdapterUser(AppDBContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
         public async Task<User> CreateUser(User user)
         {
             _dbContext.Users.Add(user);

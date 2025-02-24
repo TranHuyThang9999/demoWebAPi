@@ -9,13 +9,13 @@ namespace WebApplicationDemoContext.DTO
 
     public class RequestUserLogin
     {
-        public string Email { get; set; }
+        public string Name { get; set; }
         public string Password { get; set; }
     }
 
     public class UserResponse
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
     }
@@ -23,6 +23,5 @@ namespace WebApplicationDemoContext.DTO
     public class UserLoginResponse
     {
         public string Token { get; set; }
-        public UserResponse User { get; set; }
     }
 }
