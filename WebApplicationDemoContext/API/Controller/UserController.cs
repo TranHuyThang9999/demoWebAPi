@@ -10,7 +10,7 @@ public class UserController : ControllerBase
     public IActionResult GetDemoContext()
     {
         var contextValue = HttpContext.Items["ContextValue"]?.ToString();
+        
         return Ok(new { Message = "Context value retrieved successfully", ContextValue = contextValue });
     }
-    
 }

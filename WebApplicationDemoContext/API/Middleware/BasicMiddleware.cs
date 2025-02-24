@@ -1,11 +1,11 @@
 
 namespace WebApplicationDemoContext.Middleware
 {
-    public class BasicMiddleware : IMiddleware
+    public class Middleware : IMiddleware
     {
-        private readonly ILogger<BasicMiddleware> _logger;
+        private readonly ILogger<Middleware> _logger;
 
-        public BasicMiddleware(ILogger<BasicMiddleware> logger)
+        public Middleware(ILogger<Middleware> logger)
         {
             _logger = logger;
         }

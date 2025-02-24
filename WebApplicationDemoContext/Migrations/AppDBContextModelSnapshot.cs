@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApplicationDemoContext.DBContext;
 
@@ -10,12 +9,10 @@ using WebApplicationDemoContext.DBContext;
 
 namespace WebApplicationDemoContext.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20250221084555_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(AppDBContext))]
+    partial class AppDBContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,7 +21,7 @@ namespace WebApplicationDemoContext.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("WebApplicationDemoContext.model.User", b =>
+            modelBuilder.Entity("WebApplicationDemoContext.core.Model.User", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("int");
@@ -35,13 +32,17 @@ namespace WebApplicationDemoContext.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

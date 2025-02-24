@@ -1,8 +1,8 @@
-using WebApplicationDemoContext.model;
+using WebApplicationDemoContext.core.Model;
 
 namespace WebApplicationDemoContext.Repositories;
 
-public interface IUser
+public interface IUserRepository
 {
     public Task <User>AddUser(User user);
     public Task<User> UpdateUserByID(User user);

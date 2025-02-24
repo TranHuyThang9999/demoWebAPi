@@ -1,18 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplicationDemoContext;
 using WebApplicationDemoContext.DBContext;
 using WebApplicationDemoContext.Middleware;
+using WebApplicationDemoContext.Repositories;
+using WebApplicationDemoContext.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddTransient<IUserRepository, AdapterUser>();
 
-builder.Services.AddTransient<BasicMiddleware>();//
-
+builder.Services.AddTransient<Middleware>(); //
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -22,10 +24,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<BasicMiddleware>();//
-
+app.UseMiddleware<Middleware>(); //
 app.UseHttpsRedirection();
 app.UseAuthorization();
-app.MapControllers();//
+app.MapControllers();
 
 app.Run();
