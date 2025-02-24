@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApplicationDemoContext.DBContext;
 using WebApplicationDemoContext.Repositories;
-using WebApplicationDemoContext.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using WebApplicationDemoContext.API.Middleware;
+using WebApplicationDemoContext.Core.Adapter;
 using WebApplicationDemoContext.Services;
 using WebApplicationDemoContext.Services.IServices;
 

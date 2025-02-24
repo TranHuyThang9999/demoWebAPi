@@ -3,7 +3,7 @@ using WebApplicationDemoContext.core.Model;
 using WebApplicationDemoContext.DBContext;
 using WebApplicationDemoContext.Repositories;
 
-namespace WebApplicationDemoContext.Repository
+namespace WebApplicationDemoContext.Core.Adapter
 {
     public class AdapterUser : IUserRepository
     {
