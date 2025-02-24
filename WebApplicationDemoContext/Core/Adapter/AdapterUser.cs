@@ -32,7 +32,8 @@ namespace WebApplicationDemoContext.Core.Adapter
             existingUser.Name = user.Name;
             existingUser.Email = user.Email;
             existingUser.Password = user.Password;
-
+            existingUser.Updated = DateTime.UtcNow;
+            
             await _dbContext.SaveChangesAsync();
             return true;
         }
