@@ -1,5 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace WebApplicationDemoContext.Middleware
+namespace WebApplicationDemoContext.API.Middleware
 {
     public class Middleware : IMiddleware
     {
@@ -12,9 +18,9 @@ namespace WebApplicationDemoContext.Middleware
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            string token = context.Request.Headers["Authorization"];
+            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
 
-            if (string.IsNullOrEmpty(token) || !token.StartsWith("Bearer "))
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
                 _logger?.LogWarning("Unauthorized request - missing or invalid token.");
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -22,11 +28,52 @@ namespace WebApplicationDemoContext.Middleware
                 return;
             }
 
-            _logger?.LogInformation($"BasicMiddleware Invoked - Token: {token}");
+            var token = authHeader.Substring(7); // Bỏ "Bearer " khỏi token
 
-            context.Items["ContextValue"] = "This is a context value 22";
+            var userId = GetUserIdFromToken(token);
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger?.LogWarning("Unauthorized request - Unable to extract userID.");
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsync("Unauthorized");
+                return;
+            }
+
+            _logger?.LogInformation($"Authenticated user - userID: {userId}");
+
+            context.Items["userID"] = userId;
 
             await next(context);
+        }
+
+        private string? GetUserIdFromToken(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+                if (jwtToken == null)
+                {
+                    _logger?.LogWarning("Token parsing failed.");
+                    return null;
+                }
+
+                var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger?.LogWarning("Token is missing 'sub' claim.");
+                    return null;
+                }
+
+                return userId;
+            }
+            catch
+            {
+                _logger?.LogWarning("Token validation failed.");
+                return null;
+            }
         }
     }
 }

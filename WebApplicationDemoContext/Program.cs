@@ -5,7 +5,7 @@ using WebApplicationDemoContext.DBContext;
 using WebApplicationDemoContext.Repositories;
 using WebApplicationDemoContext.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using WebApplicationDemoContext.Middleware;
+using WebApplicationDemoContext.API.Middleware;
 using WebApplicationDemoContext.Services;
 using WebApplicationDemoContext.Services.IServices;
 
