@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTransient<IUserRepository, AdapterUser>();
 builder.Services.AddScoped<IServiceUser, ServiceUser>();
-
+builder.Services.AddScoped<IServiceJWT,ServiceJwt>();
 builder.Services.AddLogging();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");

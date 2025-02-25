@@ -1,17 +1,18 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using WebApplicationDemoContext.core.Model;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using WebApplicationDemoContext.Services.IServices;
 
-namespace WebApplicationDemoContext.Services.IServices;
+namespace WebApplicationDemoContext.Services;
 
-public class ServiceJWT : IServiceJWT
+public class ServiceJwt : IServiceJWT
 {
-     private readonly IConfiguration _configuration;
-    private readonly ILogger<ServiceJWT> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<ServiceJwt> _logger;
 
-    public ServiceJWT(IConfiguration configuration, ILogger<ServiceJWT> logger)
+    public ServiceJwt(IConfiguration configuration, ILogger<ServiceJwt> logger)
     {
         _configuration = configuration;
         _logger = logger;
@@ -28,12 +29,10 @@ public class ServiceJWT : IServiceJWT
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Name)
             };
 
-            // Thêm các claim tùy chỉnh nếu có
             if (customClaims != null)
             {
                 foreach (var customClaim in customClaims)
@@ -73,4 +72,47 @@ public class ServiceJWT : IServiceJWT
             throw;
         }
     }
+
+    public Dictionary<string, string> GetUserIdFromToken(string token)
+    {
+        var result = new Dictionary<string, string>();
+
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            if (jwtToken == null)
+            {
+                _logger?.LogWarning("Token parsing failed.");
+                return result;
+            }
+
+            var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "userID")?.Value;
+            var lastPasswordUpdate = jwtToken.Claims.FirstOrDefault(c => c.Type == "lastPasswordUpdate")?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                result["userID"] = userId;
+            }
+            else
+            {
+                _logger?.LogWarning("Token is missing 'userID' claim.");
+            }
+
+            if (!string.IsNullOrEmpty(lastPasswordUpdate))
+            {
+                result["lastPasswordUpdate"] = lastPasswordUpdate;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning("Token validation failed: {Message}", ex.Message);
+            return new Dictionary<string, string>(); 
+        }
+    }
+
+    
 }

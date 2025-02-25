@@ -1,16 +1,21 @@
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
+using WebApplicationDemoContext.Services.IServices;
 
 namespace WebApplicationDemoContext.API.Middleware
 {
     public class Middleware : IMiddleware
     {
         private readonly ILogger<Middleware> _logger;
+        private readonly IServiceJWT _serviceJwt;
+        private readonly IServiceUser _serviceUser;
 
-        public Middleware(ILogger<Middleware> logger)
-         {
-             _logger = logger;
-         }
+        public Middleware(ILogger<Middleware> logger, IServiceJWT serviceJwt, IServiceUser serviceUser)
+        {
+            _logger = logger;
+            _serviceJwt = serviceJwt;
+            _serviceUser = serviceUser;
+        }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
@@ -35,9 +40,10 @@ namespace WebApplicationDemoContext.API.Middleware
                 }
 
                 var token = authHeader.Substring(7);
-                var userId = GetUserIdFromToken(token);
+                var tokenInfo = _serviceJwt.GetUserIdFromToken(token);
 
-                if (string.IsNullOrEmpty(userId))
+
+                if (!tokenInfo.TryGetValue("userID", out var userId) || string.IsNullOrEmpty(userId))
                 {
                     _logger?.LogWarning("Unauthorized request - Unable to extract userID.");
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -45,8 +51,37 @@ namespace WebApplicationDemoContext.API.Middleware
                     return;
                 }
 
+                var user = _serviceUser.GetUserByUserId(int.Parse(userId));
+                if (user?.Result.Data == null)
+                {
+                    _logger?.LogWarning("Unauthorized request - Unable to extract user.");
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("Unauthorized");
+                    return;
+                }
+
+
+                if (tokenInfo.TryGetValue("lastPasswordUpdate", out var lastPasswordUpdate) &&
+                    !string.IsNullOrEmpty(lastPasswordUpdate))
+                {
+                    if (DateTime.TryParse(lastPasswordUpdate, out var tokenDateTime))
+                    {
+                        var tokenTimestamp = new DateTimeOffset(tokenDateTime).ToUnixTimeSeconds();
+                        var userTimestamp = new DateTimeOffset(user.Result.Data.Updated).ToUnixTimeSeconds();
+
+                        if (tokenTimestamp != userTimestamp)
+                        {
+                            _logger?.LogWarning("Unauthorized request - Password has been changed.");
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            await context.Response.WriteAsync(
+                                $"Unauthorized - Password changed. {tokenTimestamp} : {userTimestamp}");
+                            return;
+                        }
+                    }
+                }
+
+
                 context.Items["userID"] = userId;
-                _logger.LogInformation($"User logged in : {userId}");
                 await next(context);
             }
             catch (Exception ex)
@@ -54,37 +89,6 @@ namespace WebApplicationDemoContext.API.Middleware
                 _logger?.LogError(ex, "An unexpected error occurred in authentication middleware.");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsync($"Internal Server Error : {ex.Message}");
-            }
-        }
-
-
-        private string? GetUserIdFromToken(string token)
-        {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
-
-                if (jwtToken == null)
-                {
-                    _logger?.LogWarning("Token parsing failed.");
-                    return null;
-                }
-
-                var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    _logger?.LogWarning("Token is missing 'sub' claim.");
-                    return null;
-                }
-
-                return userId;
-            }
-            catch
-            {
-                _logger?.LogWarning("Token validation failed.");
-                return null;
             }
         }
     }
