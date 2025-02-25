@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplicationDemoContext.API.Middleware
 {
@@ -13,31 +14,50 @@ namespace WebApplicationDemoContext.API.Middleware
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            try
             {
-                _logger?.LogWarning("Unauthorized request - missing or invalid token.");
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync("Unauthorized");
-                return;
+                var endpoint = context.GetEndpoint();
+                if (endpoint != null && endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
+                {
+                    _logger?.LogInformation("Skipping authentication for AllowAnonymous endpoint.");
+                    await next(context);
+                    return;
+                }
+
+
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+
+                if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                {
+                    _logger?.LogWarning("Unauthorized request - missing or invalid token.");
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("Unauthorized");
+                    return;
+                }
+
+                var token = authHeader.Substring(7);
+                var userId = GetUserIdFromToken(token);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger?.LogWarning("Unauthorized request - Unable to extract userID.");
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("Unauthorized");
+                    return;
+                }
+
+                context.Items["userID"] = userId;
+
+                await next(context);
             }
-
-            var token = authHeader.Substring(7);
-
-            var userId = GetUserIdFromToken(token);
-            if (string.IsNullOrEmpty(userId))
+            catch (Exception ex)
             {
-                _logger?.LogWarning("Unauthorized request - Unable to extract userID.");
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync("Unauthorized");
-                return;
+                _logger?.LogError(ex, "An unexpected error occurred in authentication middleware.");
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync($"Internal Server Error{ex.Message}");
             }
-            
-            context.Items["userID"] = userId;
-
-            await next(context);
         }
+
 
         private string? GetUserIdFromToken(string token)
         {

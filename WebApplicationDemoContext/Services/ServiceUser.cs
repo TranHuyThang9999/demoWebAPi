@@ -13,7 +13,7 @@ namespace WebApplicationDemoContext.Services;
 public class ServiceUser : IServiceUser
 {
     private readonly IUserRepository _userRepository;
-
+    private readonly Logger<ServiceUser> _logger;
     public ServiceUser(IUserRepository userRepository, IConfiguration configuration)
     {
         _userRepository = userRepository;
@@ -76,24 +76,51 @@ public class ServiceUser : IServiceUser
 
     private string GenerateJwtToken(User user)
     {
-        var claims = new List<Claim>
+        try
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.Name)
-        };
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user), "User cannot be null when generating JWT.");
+            }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException()));
-        var crews = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiration = double.Parse(_configuration["Jwt:Expiration"] ?? throw new InvalidOperationException());
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(expiration),
-            signingCredentials: crews
-        );
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Name)
+            };
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            var secretKey = _configuration["Jwt:SecretKey"];
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey is missing in configuration.");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var expirationConfig = _configuration["Jwt:Expiration"];
+            if (string.IsNullOrEmpty(expirationConfig) || !double.TryParse(expirationConfig, out double expiration))
+            {
+                throw new InvalidOperationException("Invalid or missing JWT Expiration value.");
+            }
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expiration),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error occurred while generating JWT token: {Message}", ex.Message);
+            throw;
+        }
     }
+
+    
 }
