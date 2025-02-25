@@ -83,15 +83,15 @@ public class ServiceUser : IServiceUser
             new Claim(ClaimTypes.Name, user.Name)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException()));
+        var crews = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expiration = double.Parse(_configuration["Jwt:Expiration"] ?? throw new InvalidOperationException());
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: creds
+            expires: DateTime.Now.AddMinutes(expiration),
+            signingCredentials: crews
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

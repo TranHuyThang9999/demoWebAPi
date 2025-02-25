@@ -15,7 +15,7 @@ namespace WebApplicationDemoContext.Common
         public bool Success { get; set; }
         public string Message { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] // Bỏ qua khi null
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public T? Data { get; set; }
 
         public static Result<T> Ok(T data, string message = "Success") =>
