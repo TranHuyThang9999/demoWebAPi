@@ -8,9 +8,9 @@ namespace WebApplicationDemoContext.API.Middleware
         private readonly ILogger<Middleware> _logger;
 
         public Middleware(ILogger<Middleware> logger)
-        {
-            _logger = logger;
-        }
+         {
+             _logger = logger;
+         }
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
@@ -19,7 +19,6 @@ namespace WebApplicationDemoContext.API.Middleware
                 var endpoint = context.GetEndpoint();
                 if (endpoint != null && endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>() != null)
                 {
-                    _logger?.LogInformation("Skipping authentication for AllowAnonymous endpoint.");
                     await next(context);
                     return;
                 }
@@ -47,14 +46,14 @@ namespace WebApplicationDemoContext.API.Middleware
                 }
 
                 context.Items["userID"] = userId;
-
+                _logger.LogInformation($"User logged in : {userId}");
                 await next(context);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "An unexpected error occurred in authentication middleware.");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsync($"Internal Server Error{ex.Message}");
+                await context.Response.WriteAsync($"Internal Server Error : {ex.Message}");
             }
         }
 

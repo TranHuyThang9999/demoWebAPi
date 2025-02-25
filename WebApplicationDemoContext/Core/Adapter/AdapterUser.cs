@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplicationDemoContext.core.Model;
+using WebApplicationDemoContext.Core.Repositories;
 using WebApplicationDemoContext.DBContext;
-using WebApplicationDemoContext.Repositories;
 
 namespace WebApplicationDemoContext.Core.Adapter
 {
@@ -31,7 +31,6 @@ namespace WebApplicationDemoContext.Core.Adapter
 
             existingUser.Name = user.Name;
             existingUser.Email = user.Email;
-            existingUser.Password = user.Password;
             existingUser.Updated = DateTime.UtcNow;
             
             await _dbContext.SaveChangesAsync();

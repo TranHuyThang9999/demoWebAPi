@@ -1,26 +1,27 @@
 using WebApplicationDemoContext.Common;
 using WebApplicationDemoContext.core.Model;
 using WebApplicationDemoContext.DTO;
-using WebApplicationDemoContext.Repositories;
 using WebApplicationDemoContext.Services.IServices;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using WebApplicationDemoContext.Core.Repositories;
 
 namespace WebApplicationDemoContext.Services;
 
 public class ServiceUser : IServiceUser
 {
     private readonly IUserRepository _userRepository;
-    private readonly Logger<ServiceUser> _logger;
-    public ServiceUser(IUserRepository userRepository, IConfiguration configuration)
+    private readonly ILogger<ServiceUser> _logger;
+    private readonly IConfiguration _configuration;
+
+    public ServiceUser(IUserRepository userRepository, IConfiguration configuration, ILogger<ServiceUser> logger)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _logger = logger;
     }
-
-    private readonly IConfiguration _configuration;
 
     public async Task<Result<User>> AddUser(RequestUserCreate request)
     {
@@ -67,11 +68,43 @@ public class ServiceUser : IServiceUser
         return Result<UserLoginResponse>.Ok(response, "Login successful");
     }
 
-    public async Task<Result<User>> GetUserByUserID(int userID)
+    public async Task<Result<User>> GetUserByUserId(int userID)
     {
         var user = await _userRepository.GetUserByID(userID);
 
         return user == null ? Result<User>.Fail("User not found") : Result<User>.Ok(user);
+    }
+
+    public async Task<Result<UserResponse>> UpdateUserByUserId(UpdateUserRequest request)
+    {
+        try
+        {
+            var userResponse = new User
+            {
+                Id = request.Id,
+                Name = request.Username,
+                Email = request.Email,
+                Updated = DateTime.UtcNow
+            };
+            _logger.LogInformation($"Updating user  : {request.Id} {request.Username} {request.Email}");
+            var status = await _userRepository.UpdateUserByID(userResponse);
+            if (!status)
+            {
+                return Result<UserResponse>.Fail("User not found");
+            }
+
+            return Result<UserResponse>.Ok(null, "User updated successfully");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e.Message);
+            throw;
+        }
+    }
+
+    public async Task<Result<UserResponse>> DeleteUserByUserID(int userID)
+    {
+        return new Result<UserResponse>();
     }
 
     private string GenerateJwtToken(User user)
@@ -87,6 +120,7 @@ public class ServiceUser : IServiceUser
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Birthdate, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, user.Name)
             };
 
@@ -121,6 +155,4 @@ public class ServiceUser : IServiceUser
             throw;
         }
     }
-
-    
 }

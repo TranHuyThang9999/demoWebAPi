@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using ServiceStack.DataAnnotations;
+
 namespace WebApplicationDemoContext.DTO
 {
     public class RequestUserCreate
@@ -23,5 +26,14 @@ namespace WebApplicationDemoContext.DTO
     public class UserLoginResponse
     {
         public string Token { get; set; }
+    }
+
+    public class UpdateUserRequest
+    {
+        [JsonIgnore]
+        public int Id { get; set; }
+        [Required]
+        public string Username { get; set; }
+        public string Email { get; set; }
     }
 }

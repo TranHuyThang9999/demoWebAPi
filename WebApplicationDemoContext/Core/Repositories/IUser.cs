@@ -1,6 +1,6 @@
 using WebApplicationDemoContext.core.Model;
 
-namespace WebApplicationDemoContext.Repositories;
+namespace WebApplicationDemoContext.Core.Repositories;
 
 public interface IUserRepository
 {
