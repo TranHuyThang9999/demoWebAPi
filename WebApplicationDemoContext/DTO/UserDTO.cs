@@ -3,7 +3,7 @@ using ServiceStack.DataAnnotations;
 
 namespace WebApplicationDemoContext.DTO
 {
-    public class RequestUserCreate
+    public class UserDTO
     {
         public string Username { get; set; }
         public string Email { get; set; }

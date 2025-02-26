@@ -20,7 +20,7 @@ public class ServiceUser : IServiceUser
         _serviceJWT = serviceJwt;
     }
 
-    public async Task<Result<User>> AddUser(RequestUserCreate request)
+    public async Task<Result<User>> AddUser(UserDTO request)
     {
         var user = await _userRepository.GetUserByName(request.Username);
         if (user != null)
