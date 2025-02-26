@@ -1,11 +1,11 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WebApplicationDemoContext.DBContext;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using WebApplicationDemoContext.API.Middleware;
 using WebApplicationDemoContext.Core.Adapter;
+using WebApplicationDemoContext.Core.DBContext;
 using WebApplicationDemoContext.Core.Repositories;
 using WebApplicationDemoContext.Services;
 using WebApplicationDemoContext.Services.IServices;

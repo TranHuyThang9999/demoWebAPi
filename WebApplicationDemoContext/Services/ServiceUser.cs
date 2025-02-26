@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Transactions;
 using WebApplicationDemoContext.Common;
 using WebApplicationDemoContext.core.Model;
 using WebApplicationDemoContext.DTO;
@@ -45,6 +46,10 @@ public class ServiceUser : IServiceUser
 
     public async Task<Result<UserLoginResponse>> Login(RequestUserLogin request)
     {
+        var scope = new TransactionScope()
+        {
+            
+        }
         var user = await _userRepository.GetUserByName(request.Name);
         if (user == null)
         {

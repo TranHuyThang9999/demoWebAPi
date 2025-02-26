@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplicationDemoContext.Core.DBContext;
 using WebApplicationDemoContext.core.Model;
 using WebApplicationDemoContext.Core.Repositories;
-using WebApplicationDemoContext.DBContext;
 
 namespace WebApplicationDemoContext.Core.Adapter
 {

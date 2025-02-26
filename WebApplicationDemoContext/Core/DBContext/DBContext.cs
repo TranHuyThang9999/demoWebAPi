@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplicationDemoContext.core.Model;
 
-namespace WebApplicationDemoContext.DBContext
+namespace WebApplicationDemoContext.Core.DBContext
 {
     public class AppDBContext : DbContext
     {
@@ -9,7 +9,6 @@ namespace WebApplicationDemoContext.DBContext
             : base(options)
         {
         }
-
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
